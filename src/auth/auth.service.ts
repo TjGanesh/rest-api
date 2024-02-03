@@ -1,31 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Users } from './schema/auth.schema';
+import { SignInDto, SignUpDto } from './dto';
 
 @Injectable()
 export class AuthService {
   constructor(@InjectModel(Users.name) private model: Model<Users>) {}
-  async findAll(): Promise<Users[]> {
-    const users = await this.model.find().exec();
-    console.log(users);
-    return users;
+
+  async signIn(signInDto: SignInDto): Promise<Users> {
+    const user = await this.model.findOne({ email: signInDto.email }).exec();
+    if (user?.password) {
+      throw new UnauthorizedException();
+    }
+    return user;
   }
-  async findOne(): Promise<Users> {
-    const users = await this.model
-      .findOne({ email: 'eniesel1@liveinternet.ru' })
-      .exec();
-    console.log(users);
-    return users;
-  }
-  async createUser(): Promise<Users> {
+  async createUser(signUpDto: SignUpDto): Promise<Users> {
     const createdUser = await this.model.create({
-      email: 'ganesh@sunkara.com',
-      password: 'asdadasdasdd',
-      firstName: 'ganesh',
-      lastName: 'sunkara',
+      email: signUpDto.email,
+      password: signUpDto.password,
+      firstName: signUpDto.firstName,
+      lastName: signUpDto.lastName,
     });
-    console.log(createdUser);
     return createdUser;
   }
 }
